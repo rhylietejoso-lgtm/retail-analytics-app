@@ -111,18 +111,13 @@
         <div class="nav-item" onclick="switchTab('pos', this)">
             <i class="fa-solid fa-cash-register"></i> Point of Sale
         </div>
-        <div class="nav-item">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> AI Suggestions
-        </div>
-        <div class="nav-item">
-            <i class="fa-solid fa-chart-simple"></i> Reports
-        </div>
     </div>
 
     <div class="main-content">
         <div class="header">
             <h1>Smart Retail Analytics System</h1>
             <p>Clothing & Mobile Accessories Shop</p>
+            <button onclick="resetData()" style="position: absolute; top: 20px; right: 30px; background: #ff4d4f; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">Reset Data</button>
         </div>
 
         <div id="dashboard" class="tab-content active">
@@ -300,6 +295,13 @@
             element.classList.add('active');
         }
 
+        function resetData() {
+            if (confirm('Are you sure you want to reset all data? This will clear all products, suppliers, and sales history.')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
         const ctx = document.getElementById('profitChart').getContext('2d');
         const profitChart = new Chart(ctx, {
             type: 'line',
@@ -472,30 +474,7 @@
             const lowStockList = document.getElementById('low-stock-list');
             aiList.innerHTML = ''; lowStockList.innerHTML = '';
 
-            // 1. Updated High Demand: Sold > 70% of starting stock
-            const highDemandItems = stats
-                .filter(item => (item.qty / item.baseStock) > 0.7)
-                .sort((a, b) => (b.qty / b.baseStock) - (a.qty / a.baseStock))
-                .slice(0, 3);
-
-            if (highDemandItems.length > 0) {
-                highDemandItems.forEach(item => {
-                    const percent = Math.round((item.qty / item.baseStock) * 100);
-                    aiList.innerHTML += `
-                        <li class="trend">
-                            <i class="fa-solid fa-fire"></i> 
-                            <strong>High Demand:</strong> ${item.name} (${percent}% sold — ${item.qty} items).
-                        </li>`;
-                });
-            } else if (salesData.length > 0) {
-                // Fallback if no item hit 70%
-                aiList.innerHTML += `<li class="trend"><i class="fa-solid fa-arrow-trend-up"></i> <strong>Top Seller:</strong> ${salesData[0].name} is performing well.</li>`;
-            }
-
-            // Low Stock Alerts from products
-            products.filter(p => p.quantity < 10).forEach(p => {
-                lowStockList.innerHTML += `<li class="alert"><i class="fa-solid fa-triangle-exclamation"></i> <strong>Restock:</strong> ${p.name} has low stock (${p.quantity} left).</li>`;
-            });
+            // AI Insights now handled in renderSalesSummary for realtime data
         }
 
         function updateTables() {
@@ -873,6 +852,28 @@
                         <span style="font-weight:bold;">${item.qty}</span>
                     </li>`;
             });
+
+            // Update AI Insights based on realtime data
+            const aiList = document.getElementById('ai-insights');
+            aiList.innerHTML = '';
+
+            if (summary.items.length > 0) {
+                // Top Seller
+                aiList.innerHTML += `<li class="trend"><i class="fa-solid fa-fire"></i> <strong>Top Seller:</strong> ${summary.items[0].name} with ${summary.items[0].qty} sales.</li>`;
+
+                // High Volume Items (sold more than 10)
+                const highVolume = summary.items.filter(item => item.qty > 10);
+                if (highVolume.length > 1) {
+                    aiList.innerHTML += `<li class="trend"><i class="fa-solid fa-arrow-trend-up"></i> <strong>High Volume:</strong> ${highVolume.length} items sold over 10 units.</li>`;
+                }
+
+                // Recent Sales Trend
+                if (summary.totalRev > 1000) {
+                    aiList.innerHTML += `<li class="trend"><i class="fa-solid fa-chart-line"></i> <strong>Strong Performance:</strong> Total revenue exceeds ₱1,000.</li>`;
+                }
+            } else {
+                aiList.innerHTML = '<li style="color: #888; background: transparent; border:none;">No sales data yet...</li>';
+            }
         }
 
         function quickSell(id) {
