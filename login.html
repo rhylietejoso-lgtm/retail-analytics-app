@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Login</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #2c3e50;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.login-box {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  width: 300px;
+  text-align: center;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  background: #3498db;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.error {
+  color: red;
+  font-size: 14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="login-box">
+  <h2>Admin Login</h2>
+
+  <input type="text" id="Username" placeholder="Username">
+  <input type="Password" id="Password" placeholder="Password">
+
+  <button onclick="login()">Login</button>
+
+  <p class="error" id="error"></p>
+</div>
+
+<script>
+function login() {
+  const user = document.getElementById("Username").value;
+  const pass = document.getElementById("Password").value;
+
+  
+  if (user === "Morquida" && pass === "12345") {
+    window.location.href = "index.html"; 
+  } else {
+    document.getElementById("error").innerText = "Invalid login!";
+  }
+}
+</script>
+
+</body>
+</html>

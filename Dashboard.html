@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Retail Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #f4f6f9;
+}
+
+.container {
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.card {
+  padding: 15px;
+  border-radius: 10px;
+  color: white;
+}
+
+.blue { background: #3498db; }
+.orange { background: #e67e22; }
+.green { background: #2ecc71; }
+.purple { background: #8e44ad; }
+
+.section {
+  margin-top: 25px;
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.flex {
+  display: flex;
+  gap: 20px;
+}
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+}
+
+.alert {
+  background: #fff3cd;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 5px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <h2>Smart Retail Analytics System</h2>
+    <div>Welcome, (username)</div>
+  </div>
+
+  <!-- CARDS -->
+  <div class="cards">
+    <div class="card blue">
+      <h4>Today's Sales</h4>
+      <h2 id="sales">₱0</h2>
+    </div>
+
+    <div class="card orange">
+      <h4>Items Sold</h4>
+      <h2 id="items">0</h2>
+    </div>
+
+    <div class="card green">
+      <h4>Inventory</h4>
+      <h2 id="inventory">0</h2>
+    </div>
+
+    <div class="card purple">
+      <h4>Best Seller</h4>
+      <h3 id="bestSeller">-</h3>
+    </div>
+  </div>
+
+  <!-- CHART -->
+  <div class="section">
+    <h3>Weekly Sales</h3>
+    <canvas id="salesChart"></canvas>
+  </div>
+
+  <!-- TOP ITEMS + ALERTS -->
+  <div class="flex">
+
+    <div class="section" style="flex:1;">
+      <h3>Top Selling Items</h3>
+      <div id="topItems"></div>
+    </div>
+
+    <div class="section" style="flex:1;">
+      <h3>Low Stock Alerts</h3>
+      <div id="alerts"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// SAMPLE DATA (replace with backend later)
+const data = {
+  sales: 5200,
+  itemsSold: 35,
+  inventory: 120,
+  bestSeller: "Phone Charging Cable",
+
+  weeklySales: [2000, 3000, 3200, 4000, 5200, 4800, 3500],
+
+  topItems: [
+    { name: "Black T-Shirt", sold: 30 },
+    { name: "Wireless Earbuds", sold: 25 },
+    { name: "USB-C Adapter", sold: 20 }
+  ],
+
+  lowStock: [
+    { name: "Black T-Shirt (M)", stock: 5 },
+    { name: "USB Charger", stock: 8 }
+  ]
+};
+
+// UPDATE CARDS
+document.getElementById("sales").innerText = "₱" + data.sales;
+document.getElementById("items").innerText = data.itemsSold;
+document.getElementById("inventory").innerText = data.inventory;
+document.getElementById("bestSeller").innerText = data.bestSeller;
+
+// TOP ITEMS
+const topItemsDiv = document.getElementById("topItems");
+data.topItems.forEach(item => {
+  topItemsDiv.innerHTML += `
+    <div class="list-item">
+      <span>${item.name}</span>
+      <b>${item.sold}</b>
+    </div>
+  `;
+});
+
+// ALERTS
+const alertsDiv = document.getElementById("alerts");
+data.lowStock.forEach(item => {
+  alertsDiv.innerHTML += `
+    <div class="alert">
+      ${item.name} - Only ${item.stock} left!
+    </div>
+  `;
+});
+
+// CHART
+new Chart(document.getElementById("salesChart"), {
+  type: "line",
+  data: {
+    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    datasets: [{
+      label: "Sales",
+      data: data.weeklySales,
+      borderWidth: 2,
+      fill: true
+    }]
+  }
+});
+</script>
+
+</body>
+</html>
