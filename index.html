@@ -438,6 +438,7 @@
             updateDashboard(totalRev, totalSold, totalStock, allProductStats);
             updateTables(baseData);
             renderDailyHistory();
+            renderSalesSummary();
             alert("Calculations complete!");
             switchTab('dashboard', document.querySelectorAll('.nav-item')[0]);
         }
@@ -725,7 +726,7 @@
             if (cart.length === 0) return;
             const saleId = Date.now().toString();
             const total = parseFloat(document.getElementById('cart-total').innerText);
-            sales.push({id: saleId, items: cart.map(i => ({productId: i.id, qty: i.qty})), total, date: new Date()});
+            sales.push({id: saleId, items: cart.map(i => ({productId: i.id, qty: i.qty, name: i.name, price: i.price})), total, date: new Date()});
             cart.forEach(item => {
                 const p = products.find(p => p.id === item.id);
                 if (p) p.quantity -= item.qty;
@@ -737,6 +738,7 @@
             renderPOSProducts();
             alert('Sale completed!');
             updateInventoryDisplay();
+            renderSalesSummary();
             renderManualSales();
             updateTables();
         });
@@ -803,16 +805,87 @@
             });
         }
 
+        function getSalesSummary() {
+            const salesMap = {};
+            let totalRev = 0;
+            let totalQty = 0;
+
+            sales.forEach(sale => {
+                sale.items.forEach(item => {
+                    const qty = parseInt(item.qty) || 0;
+                    const product = products.find(p => p.id === item.productId) || {};
+                    let price = item.price !== undefined ? parseFloat(item.price || 0) : parseFloat(product.price || 0);
+                    if (price === 0 && sale.items.length === 1) {
+                        price = parseFloat(sale.total || 0) / Math.max(1, qty);
+                    }
+                    const name = item.name || product.name || item.productId;
+                    const revenue = price * qty;
+
+                    totalRev += revenue;
+                    totalQty += qty;
+
+                    if (!salesMap[name]) {
+                        salesMap[name] = { name, qty: 0, revenue: 0 };
+                    }
+                    salesMap[name].qty += qty;
+                    salesMap[name].revenue += revenue;
+                });
+            });
+
+            return {
+                totalRev,
+                totalQty,
+                items: Object.values(salesMap).sort((a, b) => b.qty - a.qty)
+            };
+        }
+
+        function renderSalesSummary() {
+            const summary = getSalesSummary();
+            const salesBody = document.querySelector('#sales-table tbody');
+            if (summary.items.length === 0) {
+                salesBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#888;">No sales recorded yet.</td></tr>';
+            } else {
+                salesBody.innerHTML = summary.items.map(item => `
+                    <tr><td>${item.name}</td><td>${item.qty}</td><td>₱${item.revenue.toFixed(2)}</td></tr>
+                `).join('');
+            }
+
+            document.getElementById('dash-sales').innerText = `₱${summary.totalRev.toLocaleString()}`;
+            document.getElementById('dash-items-sold').innerText = summary.totalQty;
+            if (summary.items.length > 0) {
+                document.getElementById('dash-best-seller').innerText = summary.items[0].name;
+                document.getElementById('dash-best-seller-sales').innerText = `${summary.items[0].qty} Sales`;
+            } else {
+                document.getElementById('dash-best-seller').innerText = 'No sales yet';
+                document.getElementById('dash-best-seller-sales').innerText = '0 Sales';
+            }
+
+            const topList = document.getElementById('top-selling-list');
+            topList.innerHTML = '';
+            summary.items.slice(0, 5).forEach((item, index) => {
+                const colors = ['#4bc970', '#4bc970', '#f28b30', '#f472b6', '#2d89e5'];
+                topList.innerHTML += `
+                    <li style="display:flex; align-items:center; margin-bottom:15px;">
+                        <span style="width: 120px; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.name}</span>
+                        <div style="flex:1; background:#eee; height:12px; border-radius:10px; margin:0 15px;">
+                            <div style="width:${Math.min(item.qty * 5, 100)}%; background:${colors[index]}; height:100%; border-radius:10px;"></div>
+                        </div>
+                        <span style="font-weight:bold;">${item.qty}</span>
+                    </li>`;
+            });
+        }
+
         function quickSell(id) {
             const qty = prompt('Enter quantity to sell:');
             if (qty && parseInt(qty) > 0) {
                 const p = products.find(p => p.id === id);
                 if (p && p.quantity >= parseInt(qty)) {
                     p.quantity -= parseInt(qty);
-                    const saleId = Date.now().toString();
-                    sales.push({id: saleId, items: [{productId: id, qty: parseInt(qty)}], total: p.price * parseInt(qty), date: new Date()});
+                            const saleId = Date.now().toString();
+                    sales.push({id: saleId, items: [{productId: id, qty: parseInt(qty), name: p.name, price: p.price}], total: p.price * parseInt(qty), date: new Date()});
                     saveData();
                     updateInventoryDisplay();
+                    renderSalesSummary();
                     updateTables();
                     renderManualSales();
                     alert('Sold!');
@@ -827,6 +900,7 @@
         renderSuppliers();
         renderPOSProducts();
         renderManualSales();
+        renderSalesSummary();
         renderStockAnalyzer();
         updateTables();
     </script>
