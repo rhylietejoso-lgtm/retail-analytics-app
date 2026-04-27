@@ -102,6 +102,12 @@
         <div class="nav-item" onclick="switchTab('sales', this)">
             <i class="fa-solid fa-clock-rotate-left"></i> Sales History
         </div>
+        <div class="nav-item">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> AI Suggestions
+        </div>
+        <div class="nav-item">
+            <i class="fa-solid fa-chart-simple"></i> Reports
+        </div>
     </div>
 
     <div class="main-content">
@@ -125,9 +131,9 @@
                     <div class="value" id="dash-inventory">0 <span style="font-size:14px;font-weight:normal;">items</span></div>
                 </div>
                 <div class="kpi-card kpi-purple">
-                    <h3>Top 3 Best Sellers</h3>
-                    <div style="font-weight: bold; margin-top:5px; font-size: 13px; line-height: 1.4;" id="dash-best-seller">Upload Data...</div>
-                    <div style="display:none;" id="dash-best-seller-sales">0 Sales</div>
+                    <h3>Weekly Best Seller</h3>
+                    <div style="font-weight: bold; margin-top:5px;" id="dash-best-seller">Upload Data...</div>
+                    <div style="font-size: 14px;" id="dash-best-seller-sales">0 Sales</div>
                 </div>
             </div>
 
@@ -345,8 +351,8 @@
             document.getElementById('dash-inventory').innerHTML = `${stock} <span style="font-size:14px;">items</span>`;
 
             if (salesData.length > 0) {
-                const top3 = salesData.slice(0, 3);
-                document.getElementById('dash-best-seller').innerHTML = top3.map((item, index) => `${index + 1}. ${item.name} (${item.qty} Sales)`).join('<br>');
+                document.getElementById('dash-best-seller').innerText = salesData[0].name;
+                document.getElementById('dash-best-seller-sales').innerText = `${salesData[0].qty} Sales`;
             }
 
             const topList = document.getElementById('top-selling-list');
@@ -383,12 +389,13 @@
                         </li>`;
                 });
             } else if (salesData.length > 0) {
+                // Fallback if no item hit 70%
                 aiList.innerHTML += `<li class="trend"><i class="fa-solid fa-arrow-trend-up"></i> <strong>Top Seller:</strong> ${salesData[0].name} is performing well.</li>`;
             }
 
             stats.forEach(item => {
                 // 2. Low Stock Alerts
-                if (item.remainingStock === 0) {
+                if (item.remainingStock < 10) {
                     lowStockList.innerHTML += `
                         <li class="alert">
                             <i class="fa-solid fa-triangle-exclamation"></i> 
@@ -396,13 +403,13 @@
                         </li>`;
                 }
                 
-                // 3. Updated Low Demand: Sold less than 20% of original stock
-                const demandThreshold = item.baseStock * 0.20;
-                if (item.qty < demandThreshold) {
+                // 3. Updated Low Demand: Displaying amount sold
+                const demandThreshold = item.baseStock * 0.10;
+                if (item.qty < demandThreshold && item.qty > 0) {
                     aiList.innerHTML += `
                         <li class="warning">
                             <i class="fa-solid fa-arrow-trend-down"></i> 
-                            <strong>Low Demand:</strong> ${item.name} has only sold ${item.qty} units.
+                            <strong>Low Demand:</strong> ${item.name} has only sold ${item.qty} units so far.
                         </li>`;
                 }
             });
@@ -414,7 +421,7 @@
             baseData.forEach(row => {
                 const name = row['Product Name'];
                 const curr = currentInventory[name] !== undefined ? currentInventory[name] : row['Stock'];
-                invTbody.innerHTML += `<tr><td>${name}</td><td>${row['Stock']}</td><td style="font-weight:bold; color:${curr === 0 ? '#ff4d4f' : '#333'}">${curr}</td><td>₱${row['Price']}</td></tr>`;
+                invTbody.innerHTML += `<tr><td>${name}</td><td>${row['Stock']}</td><td style="font-weight:bold; color:${curr < 10 ? '#ff4d4f' : '#333'}">${curr}</td><td>₱${row['Price']}</td></tr>`;
             });
 
             const salesTbody = document.querySelector('#sales-table tbody');
